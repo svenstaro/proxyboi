@@ -1,0 +1,28 @@
+[package]
+name = "proxyboi"
+version = "0.1.0"
+description = "A super simple reverse proxy with TLS support"
+authors = ["Sven-Hendrik Haase <svenstaro@gmail.com>"]
+repository = "https://github.com/svenstaro/proxyboi"
+license = "MIT"
+readme = "README.md"
+keywords = ["reverse-proxy", "proxy", "https", "ssl", "tls"]
+categories = ["command-line-utilities", "network-programming"]
+edition = "2018"
+
+[badges]
+travis-ci = { repository = "svenstaro/proxyboi", branch = "master" }
+maintenance = { status = "actively-developed" }
+
+[profile.release]
+lto = true
+
+[dependencies]
+actix-web = "1.0"
+actix-service = "0.4"
+actix-http = "0.2"
+simplelog = "0.6"
+log = "0.4"
+futures = "0.1.25"
+chrono = "0.4"
+structopt = "0.2"
