@@ -67,22 +67,16 @@ fn forward(
         .get("forwarded")
         .map(|x| x.to_str().unwrap_or(""));
     let forwarded_appended = if let Some(forwarded) = forwarded {
-        let forwarded_for = {
-            let for_start = forwarded.find("for=");
-            if let Some(for_start) = for_start {
-                // Try to find a ';' which ends a `for` subfield.
-                // If there is none, the string field is the last field in the header.
-                if let Some(for_end) = forwarded[for_start..].find(';') {
-                    Some(&forwarded[for_start..for_start+for_end])
-                } else {
-                    Some(&forwarded[for_start..forwarded.len()])
-                }
+        let for_start = forwarded.find("for=");
+        if let Some(for_start) = for_start {
+            // Try to find a ';' which ends a `for` subfield.
+            // If there is none, the string field is the last field in the header.
+            let forwarded_for = if let Some(for_end) = forwarded[for_start..].find(';') {
+                &forwarded[for_start..for_start + for_end]
             } else {
-                None
-            }
-        };
+                &forwarded[for_start..forwarded.len()]
+            };
 
-        if let Some(forwarded_for) = forwarded_for {
             let forwarded_for_appended = format!("{}, for={}", forwarded_for, peer);
 
             // Now we have to place this newly appended list of items back into the header.
