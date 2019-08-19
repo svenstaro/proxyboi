@@ -45,7 +45,7 @@ fn forward(
         .head()
         .peer_addr
         .map(|p| p.ip().to_string())
-        .unwrap_or("unknown".to_string());
+        .unwrap_or_else(|| "unknown".to_string());
 
     // We want to append the current host to the forwarded for list.
     // In order to do this, we have to parse the possibly existing Forwarded and X-Forwarded-For
@@ -132,7 +132,7 @@ fn forward(
 
 fn main() -> std::io::Result<()> {
     let args = Config::from_args();
-    let listen = args.listen.clone();
+    let listen = args.listen;
 
     HttpServer::new(move || {
         App::new()
