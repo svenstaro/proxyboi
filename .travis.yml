@@ -1,0 +1,83 @@
+language: rust
+dist: xenial
+
+# According to https://docs.travis-ci.com/user/customizing-the-build#rows-that-are-allowed-to-fail,
+# these empty arrays are actually required.
+rust: []
+env: []
+
+addons:
+  apt:
+    packages:
+      - mingw-w64
+      - upx
+      - musl
+      - musl-dev
+      - musl-tools
+
+matrix:
+  allow_failures:
+    - rust: nightly
+      env: []
+  include:
+    - rust: stable
+      env: []
+    - rust: beta
+      env: []
+    - rust: nightly
+      env: []
+    - rust: stable
+      env:
+        - TARGET=x86_64-unknown-linux-musl
+        - BIN_NAME=proxyboi
+        - PROPER_NAME=proxyboi-linux-x86_64
+      os: linux
+    - rust: stable
+      env:
+        - TARGET=x86_64-pc-windows-gnu
+        - BIN_NAME=proxyboi.exe
+        - PROPER_NAME=proxyboi-win-x86_64.exe
+        - RUSTFLAGS="-C linker=x86_64-w64-mingw32-gcc"
+      os: linux
+    - rust: stable
+      env:
+        - TARGET=x86_64-apple-darwin
+        - BIN_NAME=proxyboi
+        - PROPER_NAME=proxyboi-osx-x86_64
+      os: osx
+    - rust:
+      env:
+        - CLIPPY=true
+
+before_install:
+  - rustup self update
+  - rustup update
+
+install:
+  # On Apple, the default target is already the right one.
+  - if [[ -n $TARGET && $TARGET != "x86_64-apple-darwin" ]]; then rustup target add $TARGET; fi
+  - if [[ -n $CLIPPY ]]; then rustup component add clippy; fi
+
+script:
+  # If this is a normal, non-deployment build...
+  - if [[ -z $TARGET && -z $CLIPPY ]]; then cargo build --verbose && RUST_BACKTRACE=1 cargo test; fi
+  - if [[ -n $CLIPPY ]]; then cargo clippy -- --deny clippy::all; fi
+  - if [[ -n $TARGET ]]; then cargo build --verbose --release --target $TARGET; fi
+
+before_deploy:
+  # If this is a binary deployment...
+  - if [[ -n $TARGET ]]; then cp -a target/$TARGET/release/$BIN_NAME $PROPER_NAME && strip $PROPER_NAME; fi
+  - # Run upx on the binary if this is a deployment for Linux or Windows
+  - if [[ $TARGET = "x86_64-pc-windows-gnu" ]]; then upx $PROPER_NAME; fi
+  - if [[ $TARGET = "x86_64-unknown-linux-musl" ]]; then upx $PROPER_NAME; fi
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: "nQxphDRTemoOEDcx/Jz1fNd5RhQqRCqgrncmrzn4WGpLFIBpaSDE9GuScH07QjBoUiXKpSgAzz/i84dOy24eoGGK5A7yMDbnAYwGvSncVz9O0n9a6qzc/AyFTNtUgbbyqtaYdl/B3n+jW0ztIzfBqUjRxp8IGP1XUnNjzGzMhmU6MkZy9uVxPnKsp1mO7Zo7YcHbnJUrqGLs5b5hKGwOMraIy8Dc9lTxOV9OrQRLiyCD4zdJqcwalTwArsdf5YiE1kkfncF8/HV4QgPBv9y4Nh5+02LL2AJCb8udX/HswdFuxcJ4htJ0pUCIl85p8u9IfjSWq8XoWUZYeLwaMej7BR0PDJo/xCeNrrjzNLhtwsMwzcjmFQAXf9neFQU2wlAKuBoT0e3JkweS/cIxYXxVCYB3FjDpM1RHxOZJV7miIQWcxwf6HQYXJvXtYrp0W4+r5ZH9n3XR9pzj6BIZK1d6lTlObX8PmKnjL26OgqOuuiP6k7Rz2+WR/JTf4/hRVw6kXU9Gh272/VMgjMCEYiuBWCxO+R8xMgrCHD+u4UkDB/Po53xx5PqfMfvYzj2zEAtWZblozG9MK3NMw3NEi+YG1FD18G3aoYyrZc479hOtA1r4L/bJ0D5iTbzLK8Skzn9QSrjxoaCBUqp3aeiaIoGtYoiQD4tHhQZq9gBIUFDjrU0="
+    file: $PROPER_NAME
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: true
+      condition: $TRAVIS_RUST_VERSION = nightly && -n $TARGET
