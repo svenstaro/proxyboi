@@ -1,6 +1,12 @@
 # proxyboi
 A super simple reverse proxy with TLS support
 
+## How to run
+
+In order to listen for proxy requests on all local interfaces on port 8080 and proxy them to a service running at example.com, do:
+
+    proxyboi -l 0.0.0.0:8080 http://example.com
+
 ## Releasing
 
 This is mostly a note for me on how to release this thing:
