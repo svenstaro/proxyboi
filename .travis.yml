@@ -80,4 +80,4 @@ deploy:
     on:
       branch: master
       tags: true
-      condition: $TRAVIS_RUST_VERSION = nightly && -n $TARGET
+      condition: $TRAVIS_RUST_VERSION = stable && -n $TARGET
