@@ -1,7 +1,14 @@
 use actix_web::client::Client;
-use actix_web::{middleware, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use futures::Future;
+use rustls::internal::pemfile::{certs, rsa_private_keys};
+use rustls::{NoClientAuth, ServerConfig};
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Error as IoError;
+use std::io::ErrorKind as IoErrorKind;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use structopt::StructOpt;
 use url::Url;
 
@@ -19,6 +26,48 @@ struct Config {
 
     #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)")]
     upstream: Url,
+
+    #[structopt(long = "cert", help = "TLS cert to use", requires = "tls_key")]
+    tls_cert: Option<PathBuf>,
+
+    #[structopt(long = "key", help = "TLS key to use", requires = "tls_cert")]
+    tls_key: Option<PathBuf>,
+}
+
+fn load_certs(filename: &PathBuf) -> std::io::Result<Vec<rustls::Certificate>> {
+    let certfile = File::open(filename)?;
+    let mut reader = BufReader::new(certfile);
+    certs(&mut reader)
+        .map_err(|_| IoError::new(IoErrorKind::Other, "File contains an invalid certificate"))
+}
+
+fn load_private_key(filename: &PathBuf) -> std::io::Result<rustls::PrivateKey> {
+    let rsa_keys = {
+        let keyfile = File::open(filename)?;
+        let mut reader = BufReader::new(keyfile);
+        rsa_private_keys(&mut reader).map_err(|_| {
+            IoError::new(IoErrorKind::Other, "File contains invalid RSA private key")
+        })?
+    };
+
+    let pkcs8_keys = {
+        let keyfile = File::open(filename)?;
+        let mut reader = BufReader::new(keyfile);
+        rustls::internal::pemfile::pkcs8_private_keys(&mut reader).map_err(|_| {
+            IoError::new(
+                IoErrorKind::Other,
+                "File contains invalid pkcs8 private key (encrypted keys not supported)",
+            )
+        })?
+    };
+
+    // prefer to load pkcs8 keys
+    if !pkcs8_keys.is_empty() {
+        Ok(pkcs8_keys[0].clone())
+    } else {
+        assert!(!rsa_keys.is_empty());
+        Ok(rsa_keys[0].clone())
+    }
 }
 
 fn forward(
@@ -26,7 +75,7 @@ fn forward(
     payload: web::Payload,
     url: web::Data<Url>,
     client: web::Data<Client>,
-) -> impl Future<Item = HttpResponse, Error = Error> {
+) -> impl Future<Item = HttpResponse, Error = actix_web::Error> {
     // Figure out new URL like such:
     // Old URL: http://localhost:8080/foo?bar=1
     // New URL: https://0.0.0.0:8081/foo?bar=1
@@ -116,7 +165,7 @@ fn forward(
 
     forwarded_req
         .send_stream(payload)
-        .map_err(Error::from)
+        .map_err(actix_web::Error::from)
         .map(|res| {
             let mut client_resp = HttpResponse::build(res.status());
             for (header_name, header_value) in res
@@ -132,16 +181,29 @@ fn forward(
 
 fn main() -> std::io::Result<()> {
     let args = Config::from_args();
-    let listen = args.listen;
 
-    HttpServer::new(move || {
+    let args_ = args.clone();
+    let mut server = HttpServer::new(move || {
         App::new()
             .data(Client::new())
-            .data(args.upstream.clone())
+            .data(args_.upstream.clone())
             .wrap(middleware::Logger::default())
             .default_service(web::route().to_async(forward))
-    })
-    .bind(listen)?
-    .system_exit()
-    .run()
+    });
+    // TODO: This conditional is kinda dirty but it'll have to do until we have stable if let chains.
+    if args.tls_cert.is_some() && args.tls_key.is_some() {
+        let tls_cert = args.tls_cert.unwrap();
+        let tls_key = args.tls_key.unwrap();
+
+        let mut config = ServerConfig::new(NoClientAuth::new());
+        let cert_file = load_certs(&tls_cert)?;
+        let key_file = load_private_key(&tls_key)?;
+        config
+            .set_single_cert(cert_file, key_file)
+            .map_err(|e| IoError::new(IoErrorKind::Other, e.to_string()))?;
+        server = server.bind_rustls(args.listen, config)?;
+    } else {
+        server = server.bind(args.listen)?;
+    }
+    server.system_exit().run()
 }

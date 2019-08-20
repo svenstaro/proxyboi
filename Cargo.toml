@@ -18,7 +18,7 @@ maintenance = { status = "actively-developed" }
 lto = true
 
 [dependencies]
-actix-web = "1.0"
+actix-web = { version= "1.0", features = ["rust-tls"] }
 actix-service = "0.4"
 actix-http = "0.2"
 simplelog = "0.6"
@@ -27,3 +27,4 @@ futures = "0.1.25"
 chrono = "0.4"
 structopt = "0.2"
 url = "2.1"
+rustls = "0.15"
