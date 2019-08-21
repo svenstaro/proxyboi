@@ -1,0 +1,21 @@
+name: Publish
+
+on:
+  push:
+    tags:
+
+jobs:
+  build:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: cargo build --release
+    - name: Upload build to tag
+      # if:
+      run: curl
