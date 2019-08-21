@@ -12,6 +12,14 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 use url::Url;
 
+fn from_url(s: &str) -> Result<Url, String> {
+    let u = s.parse::<Url>().map_err(|e| e.to_string())?;
+    if u.scheme() != "http" && u.scheme() != "https" && u.host().is_none() {
+        return Err("Invalid protocol! Must be http or https.".to_string())
+    }
+    Ok(u)
+}
+
 #[derive(StructOpt, Clone)]
 #[structopt(
     name = "proxyboi",
@@ -24,7 +32,7 @@ struct Config {
     #[structopt(short = "k", long)]
     insecure: bool,
 
-    #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)")]
+    #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)", parse(try_from_str = "from_url"))]
     upstream: Url,
 
     #[structopt(long = "cert", help = "TLS cert to use", requires = "tls_key")]
@@ -73,14 +81,14 @@ fn load_private_key(filename: &PathBuf) -> std::io::Result<rustls::PrivateKey> {
 fn forward(
     req: HttpRequest,
     payload: web::Payload,
-    url: web::Data<Url>,
+    upstream_url: web::Data<Url>,
     client: web::Data<Client>,
 ) -> impl Future<Item = HttpResponse, Error = actix_web::Error> {
     // Figure out new URL like such:
     // Old URL: http://localhost:8080/foo?bar=1
     // New URL: https://0.0.0.0:8081/foo?bar=1
     // So in effect, we have to change `protocol`, `host`, `port` and keep `path` and `query`.
-    let mut new_url = url.get_ref().clone();
+    let mut new_url = upstream_url.get_ref().clone();
     new_url.set_path(req.uri().path());
     new_url.set_query(req.uri().query());
 
