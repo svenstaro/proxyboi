@@ -12,23 +12,47 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
       - name: Dump strategy context
         env:
           STRATEGY_CONTEXT: ${{ toJson(strategy) }}
         run: echo "$STRATEGY_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
       - name: Dump matrix context
         env:
           MATRIX_CONTEXT: ${{ toJson(matrix) }}
         run: echo "$MATRIX_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
       - name: Dump job context
         env:
           JOB_CONTEXT: ${{ toJson(job) }}
         run: echo "$JOB_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
       - name: Dump runner context
         env:
           RUNNER_CONTEXT: ${{ toJson(runner) }}
         run: echo "$RUNNER_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
       - name: Dump steps context
         env:
           STEPS_CONTEXT: ${{ toJson(steps) }}
         run: echo "$STEPS_CONTEXT"
+        with:
+          files:
+            test.exe: test.lol
+            test.2: test.2
