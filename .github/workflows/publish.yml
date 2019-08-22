@@ -20,5 +20,5 @@ jobs:
     - name: Build
       run: cargo build --release
     - name: Upload build to tag
-      # if:
       run: curl
+      if: ${{ matrix.os }} == ubuntu-latest
