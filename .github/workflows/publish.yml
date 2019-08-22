@@ -13,6 +13,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
+    - uses: hecrj/setup-rust-action@master
+      with:
+        rust-version: stable
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --release
