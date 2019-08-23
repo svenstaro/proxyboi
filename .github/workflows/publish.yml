@@ -34,4 +34,4 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/release/${{ matrix.artifact_name }}
         asset_name: ${{ matrix.release_name }}
-        tag: {{ github.event.ref }}
+        tag: ${{ github.event.ref }}
