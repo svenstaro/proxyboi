@@ -1,4 +1,4 @@
-# proxyboi
+# proxyboi [![GitHub Actions Workflow](https://github.com/svenstaro/proxyboi/workflows/Build/badge.svg)](https://github.com/svenstaro/proxyboi/actions)
 A super simple reverse proxy with TLS support
 
 ## How to run
