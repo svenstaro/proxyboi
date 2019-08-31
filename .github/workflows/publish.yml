@@ -19,7 +19,7 @@ jobs:
             release_name: proxyboi-linux-amd64
           - os: windows-latest
             artifact_name: proxyboi.exe
-            release_name: proxyboi-windows-amd64
+            release_name: proxyboi-windows-amd64.exe
           - os: macos-latest
             artifact_name: proxyboi
             release_name: proxyboi-macos-amd64
