@@ -23,7 +23,9 @@ fn from_url(s: &str) -> Result<Url, String> {
 #[derive(StructOpt, Clone)]
 #[structopt(
     name = "proxyboi",
-    raw(global_settings = "&[structopt::clap::AppSettings::ColoredHelp]")
+    author,
+    about,
+    global_settings = &[structopt::clap::AppSettings::ColoredHelp],
 )]
 struct Config {
     #[structopt(short, long, default_value = "0.0.0.0:8080")]
@@ -32,7 +34,7 @@ struct Config {
     #[structopt(short = "k", long)]
     insecure: bool,
 
-    #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)", parse(try_from_str = "from_url"))]
+    #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)", parse(try_from_str = from_url))]
     upstream: Url,
 
     #[structopt(long = "cert", help = "TLS cert to use", requires = "tls_key")]
