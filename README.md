@@ -7,6 +7,10 @@ In order to listen for proxy requests on all local interfaces on port 8080 and p
 
     proxyboi -l 0.0.0.0:8080 http://example.com
 
+You can also feed your TLS certificates into it:
+
+    proxyboi -l 0.0.0.0:8080 --cert mycert.pem --key mykey.key http://example.com
+
 ## Releasing
 
 This is mostly a note for me on how to release this thing:

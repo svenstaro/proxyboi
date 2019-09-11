@@ -28,19 +28,24 @@ fn from_url(s: &str) -> Result<Url, String> {
     global_settings = &[structopt::clap::AppSettings::ColoredHelp],
 )]
 struct Config {
+    /// Socket to listen on
     #[structopt(short, long, default_value = "0.0.0.0:8080")]
     listen: SocketAddr,
 
+    /// Allow connections against upstream proxies with invalid TLS signatures
     #[structopt(short = "k", long)]
     insecure: bool,
 
-    #[structopt(help = "Upstream proxy to use (eg. http://localhost:8080)", parse(try_from_str = from_url))]
+    /// Upstream proxy to use (eg. http://localhost:8080)
+    #[structopt(parse(try_from_str = from_url))]
     upstream: Url,
 
-    #[structopt(long = "cert", help = "TLS cert to use", requires = "tls_key")]
+    /// TLS cert to use
+    #[structopt(long = "cert", requires = "tls-key")]
     tls_cert: Option<PathBuf>,
 
-    #[structopt(long = "key", help = "TLS key to use", requires = "tls_cert")]
+    /// TLS key to use
+    #[structopt(long = "key", requires = "tls-cert")]
     tls_key: Option<PathBuf>,
 }
 
