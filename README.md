@@ -1,5 +1,9 @@
-# proxyboi [![GitHub Actions Workflow](https://github.com/svenstaro/proxyboi/workflows/Build/badge.svg)](https://github.com/svenstaro/proxyboi/actions)
-A super simple reverse proxy with TLS support
+# proxyboi
+
+[![GitHub Actions Workflow](https://github.com/svenstaro/proxyboi/workflows/Build/badge.svg)](https://github.com/svenstaro/proxyboi/actions)
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/svenstaro/proxyboi)](https://cloud.docker.com/repository/docker/svenstaro/proxyboi/)
+
+**A super simple reverse proxy with TLS support**
 
 ## How to run
 
