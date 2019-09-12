@@ -32,9 +32,10 @@ struct Config {
     #[structopt(short, long, default_value = "0.0.0.0:8080")]
     listen: SocketAddr,
 
-    /// Allow connections against upstream proxies with invalid TLS signatures
-    #[structopt(short = "k", long)]
-    insecure: bool,
+    // TODO
+    // /// Allow connections against upstream proxies with invalid TLS signatures
+    // #[structopt(short = "k", long)]
+    // insecure: bool,
 
     /// Upstream proxy to use (eg. http://localhost:8080)
     #[structopt(parse(try_from_str = from_url))]
