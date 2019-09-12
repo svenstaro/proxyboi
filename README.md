@@ -2,6 +2,11 @@
 
 [![GitHub Actions Workflow](https://github.com/svenstaro/proxyboi/workflows/Build/badge.svg)](https://github.com/svenstaro/proxyboi/actions)
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/svenstaro/proxyboi)](https://cloud.docker.com/repository/docker/svenstaro/proxyboi/)
+[![AUR](https://img.shields.io/aur/version/proxyboi.svg)](https://aur.archlinux.org/packages/proxyboi/)
+[![Crates.io](https://img.shields.io/crates/v/proxyboi.svg)](https://crates.io/crates/proxyboi)
+[![dependency status](https://deps.rs/repo/github/svenstaro/proxyboi/status.svg)](https://deps.rs/repo/github/svenstaro/proxyboi)
+[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svenstaro/proxyboi/blob/master/LICENSE)
+
 
 **A super simple reverse proxy with TLS support**
 
