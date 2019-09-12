@@ -19,8 +19,8 @@ You can also feed your TLS certificates into it:
 
 This is mostly a note for me on how to release this thing:
 
-- Update version in `Cargo.toml` and run `cargo update`.
-- `git commit` and `git tag -s`, `git push`.
-- `cargo publish`
-- Releases will automatically be deployed by GitHub Actions.
-- Update AUR package.
+- Update version in `Cargo.toml` and run `cargo update`
+- `git commit` and `git tag -s`, `git push`
+- Run `cargo publish`
+- Releases will automatically be deployed by GitHub Actions
+- Update AUR package
