@@ -1,90 +1,17 @@
 use actix_web::client::Client;
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use futures::Future;
-use rustls::internal::pemfile::{certs, rsa_private_keys};
 use rustls::{NoClientAuth, ServerConfig};
-use std::fs::File;
-use std::io::BufReader;
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
-use std::net::SocketAddr;
-use std::path::PathBuf;
 use structopt::StructOpt;
 use url::Url;
 
-fn from_url(s: &str) -> Result<Url, String> {
-    let u = s.parse::<Url>().map_err(|e| e.to_string())?;
-    if u.scheme() != "http" && u.scheme() != "https" && u.host().is_none() {
-        return Err("Invalid protocol! Must be http or https.".to_string())
-    }
-    Ok(u)
-}
+mod args;
+mod tls_util;
 
-#[derive(StructOpt, Clone)]
-#[structopt(
-    name = "proxyboi",
-    author,
-    about,
-    global_settings = &[structopt::clap::AppSettings::ColoredHelp],
-)]
-struct Config {
-    /// Socket to listen on
-    #[structopt(short, long, default_value = "0.0.0.0:8080")]
-    listen: SocketAddr,
-
-    // TODO
-    // /// Allow connections against upstream proxies with invalid TLS signatures
-    // #[structopt(short = "k", long)]
-    // insecure: bool,
-
-    /// Upstream proxy to use (eg. http://localhost:8080)
-    #[structopt(parse(try_from_str = from_url))]
-    upstream: Url,
-
-    /// TLS cert to use
-    #[structopt(long = "cert", requires = "tls-key")]
-    tls_cert: Option<PathBuf>,
-
-    /// TLS key to use
-    #[structopt(long = "key", requires = "tls-cert")]
-    tls_key: Option<PathBuf>,
-}
-
-fn load_certs(filename: &PathBuf) -> std::io::Result<Vec<rustls::Certificate>> {
-    let certfile = File::open(filename)?;
-    let mut reader = BufReader::new(certfile);
-    certs(&mut reader)
-        .map_err(|_| IoError::new(IoErrorKind::Other, "File contains an invalid certificate"))
-}
-
-fn load_private_key(filename: &PathBuf) -> std::io::Result<rustls::PrivateKey> {
-    let rsa_keys = {
-        let keyfile = File::open(filename)?;
-        let mut reader = BufReader::new(keyfile);
-        rsa_private_keys(&mut reader).map_err(|_| {
-            IoError::new(IoErrorKind::Other, "File contains invalid RSA private key")
-        })?
-    };
-
-    let pkcs8_keys = {
-        let keyfile = File::open(filename)?;
-        let mut reader = BufReader::new(keyfile);
-        rustls::internal::pemfile::pkcs8_private_keys(&mut reader).map_err(|_| {
-            IoError::new(
-                IoErrorKind::Other,
-                "File contains invalid pkcs8 private key (encrypted keys not supported)",
-            )
-        })?
-    };
-
-    // prefer to load pkcs8 keys
-    if !pkcs8_keys.is_empty() {
-        Ok(pkcs8_keys[0].clone())
-    } else {
-        assert!(!rsa_keys.is_empty());
-        Ok(rsa_keys[0].clone())
-    }
-}
+use crate::args::ProxyboiConfig;
+use crate::tls_util::{load_cert, load_private_key};
 
 fn forward(
     req: HttpRequest,
@@ -196,7 +123,7 @@ fn forward(
 }
 
 fn main() -> std::io::Result<()> {
-    let args = Config::from_args();
+    let args = ProxyboiConfig::from_args();
 
     let args_ = args.clone();
     let mut server = HttpServer::new(move || {
@@ -212,7 +139,7 @@ fn main() -> std::io::Result<()> {
         let tls_key = args.tls_key.unwrap();
 
         let mut config = ServerConfig::new(NoClientAuth::new());
-        let cert_file = load_certs(&tls_cert)?;
+        let cert_file = load_cert(&tls_cert)?;
         let key_file = load_private_key(&tls_key)?;
         config
             .set_single_cert(cert_file, key_file)
