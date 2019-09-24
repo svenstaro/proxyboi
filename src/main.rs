@@ -60,7 +60,6 @@ fn forward(
     };
 
     // The X-Forwarded-For header is much simpler to handle :)
-    dbg!(req.headers().get("via"));
     let x_forwarded_for = req
         .headers()
         .get("x-forwarded-for")
