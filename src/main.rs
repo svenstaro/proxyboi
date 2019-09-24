@@ -1,16 +1,22 @@
 use actix_web::client::Client;
-use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 use futures::Future;
+use log::info;
 use rustls::{NoClientAuth, ServerConfig};
+use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
 use structopt::StructOpt;
 
 mod args;
+mod logging;
 mod tls_utils;
 mod utils;
 
 use crate::args::ProxyboiConfig;
+use crate::logging::{
+    log_incoming_request, log_outgoing_response, log_upstream_request, log_upstream_response,
+};
 use crate::tls_utils::{load_cert, load_private_key};
 use crate::utils::ForwardedHeader;
 
@@ -20,6 +26,8 @@ fn forward(
     args: web::Data<ProxyboiConfig>,
     client: web::Data<Client>,
 ) -> impl Future<Item = HttpResponse, Error = actix_web::Error> {
+    let incoming_request_log = log_incoming_request(&req, args.verbose);
+
     // Figure out new URL like such:
     // Old URL: http://localhost:8080/foo?bar=1
     // New URL: https://0.0.0.0:8081/foo?bar=1
@@ -28,12 +36,11 @@ fn forward(
     new_url.set_path(req.uri().path());
     new_url.set_query(req.uri().query());
 
-    let protocol = req.uri().scheme_str().unwrap_or("http");
-    let host = req
-        .headers()
-        .get("host")
-        .map(|x| x.to_str().unwrap_or("unknown"))
-        .unwrap_or("unknown");
+    let conn_info = &req.connection_info().clone();
+    let protocol = conn_info.scheme();
+    let version = req.version();
+    let host = conn_info.host();
+
     let peer = req
         .head()
         .peer_addr
@@ -54,9 +61,13 @@ fn forward(
         protocol,
     );
     let via = if let Some(via) = req.headers().get("via").map(|x| x.to_str().unwrap_or("")) {
-        format!("{}, HTTP/1.1 proxyboi", via)
+        format!(
+            "{previous_via}, {version:?} proxyboi",
+            previous_via = via,
+            version = version
+        )
     } else {
-        format!("HTTP/1.1 proxyboi")
+        format!("{version:?} proxyboi", version = version)
     };
 
     // The X-Forwarded-For header is much simpler to handle :)
@@ -70,7 +81,7 @@ fn forward(
         peer.clone()
     };
 
-    let forwarded_req = client
+    let upstream_req = client
         .request_from(new_url.as_str(), req.head())
         .no_decompress()
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
@@ -84,31 +95,72 @@ fn forward(
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Via
         .set_header("via", via);
 
-    forwarded_req
+    let upstream_request_log = log_upstream_request(&upstream_req, args.verbose);
+
+    upstream_req
         .send_stream(payload)
         .map_err(actix_web::Error::from)
-        .map(|res| {
-            let mut client_resp = HttpResponse::build(res.status());
-            for (header_name, header_value) in res
+        .map(move |upstream_resp| {
+            let upstream_response_log =
+                log_upstream_response(&upstream_resp, new_url.as_str(), args.verbose);
+
+            // We need to build this twice in order to log the final outgoing response.
+            // It's super ugly but I don't know any other way since we can't clone this.
+            let mut resp_for_logging = HttpResponse::build(upstream_resp.status());
+            for (header_name, header_value) in upstream_resp
                 .headers()
                 .iter()
                 .filter(|(h, _)| *h != "connection" && *h != "content-length")
             {
-                client_resp.header(header_name.clone(), header_value.clone());
+                resp_for_logging.header(header_name.clone(), header_value.clone());
             }
-            client_resp.streaming(res)
+            let resp_for_logging = resp_for_logging.finish();
+            let outgoing_response_log = log_outgoing_response(
+                &resp_for_logging,
+                &req.connection_info().remote().unwrap_or("unknown"),
+                args.verbose,
+            );
+
+            // We need to manually clone this in order to log it.
+            let mut resp = HttpResponse::build(upstream_resp.status());
+            for (header_name, header_value) in upstream_resp
+                .headers()
+                .iter()
+                .filter(|(h, _)| *h != "connection" && *h != "content-length")
+            {
+                resp.header(header_name.clone(), header_value.clone());
+            }
+            info!(
+                "{incoming_req}\n{upstream_req}\n{upstream_resp}\n{outgoing_resp}",
+                incoming_req = incoming_request_log,
+                upstream_req = upstream_request_log,
+                upstream_resp = upstream_response_log,
+                outgoing_resp = outgoing_response_log
+            );
+            resp.streaming(upstream_resp)
         })
 }
 
 fn main() -> std::io::Result<()> {
+    #[cfg(windows)]
+    Paint::enable_windows_ascii();
+
     let args = ProxyboiConfig::from_args();
+
+    if !args.quiet {
+        TermLogger::init(
+            LevelFilter::Info,
+            Config::default(),
+            TerminalMode::default(),
+        )
+        .map_err(|x| IoError::new(IoErrorKind::Other, x.to_string()))?;
+    }
 
     let args_ = args.clone();
     let mut server = HttpServer::new(move || {
         App::new()
             .data(Client::new())
             .data(args_.clone())
-            .wrap(middleware::Logger::default())
             .default_service(web::route().to_async(forward))
     });
 

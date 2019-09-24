@@ -28,6 +28,14 @@ pub struct ProxyboiConfig {
     // #[structopt(short = "k", long)]
     // pub insecure: bool,
 
+    /// Be quiet (log nothing)
+    #[structopt(short, long)]
+    pub quiet: bool,
+
+    /// Be verbose (log data of incoming and outgoing requests)
+    #[structopt(short, long)]
+    pub verbose: bool,
+
     /// Upstream proxy to use (eg. http://localhost:8080)
     #[structopt(parse(try_from_str = from_url))]
     pub upstream: Url,
