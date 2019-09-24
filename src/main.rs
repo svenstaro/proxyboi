@@ -5,25 +5,26 @@ use rustls::{NoClientAuth, ServerConfig};
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
 use structopt::StructOpt;
-use url::Url;
 
 mod args;
-mod tls_util;
+mod tls_utils;
+mod utils;
 
 use crate::args::ProxyboiConfig;
-use crate::tls_util::{load_cert, load_private_key};
+use crate::tls_utils::{load_cert, load_private_key};
+use crate::utils::ForwardedHeader;
 
 fn forward(
     req: HttpRequest,
     payload: web::Payload,
-    upstream_url: web::Data<Url>,
+    args: web::Data<ProxyboiConfig>,
     client: web::Data<Client>,
 ) -> impl Future<Item = HttpResponse, Error = actix_web::Error> {
     // Figure out new URL like such:
     // Old URL: http://localhost:8080/foo?bar=1
     // New URL: https://0.0.0.0:8081/foo?bar=1
     // So in effect, we have to change `protocol`, `host`, `port` and keep `path` and `query`.
-    let mut new_url = upstream_url.get_ref().clone();
+    let mut new_url = args.upstream.clone();
     new_url.set_path(req.uri().path());
     new_url.set_query(req.uri().query());
 
@@ -39,51 +40,27 @@ fn forward(
         .map(|p| p.ip().to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
-    // We want to append the current host to the forwarded for list.
-    // In order to do this, we have to parse the possibly existing Forwarded and X-Forwarded-For
-    // headers and append the current host value those.
-    // This is done independently for Forwarded and X-Forwarded-For because even though it would be
-    // very odd for them to have different values, it's certainly possible and not technically
-    // invalid.
-
-    // The Forwarded header is a bit nasty to parse. It can look like this:
-    // Forwarded: by=<by>;for=<foo>;host=<host>;proto=<http|https>
-    // but also like this
-    // Forwarded: for=<foo>
-    // but also this
-    // Forwarded: for=<foo>, for=<bar>
-    // also finally also this
-    // Forwarded: by=<by>;for=<foo>, for=<bar>;host=<host>
     let forwarded = req
         .headers()
         .get("forwarded")
-        .map(|x| x.to_str().unwrap_or(""));
-    let forwarded_appended = if let Some(forwarded) = forwarded {
-        let for_start = forwarded.find("for=");
-        if let Some(for_start) = for_start {
-            // Try to find a ';' which ends a `for` subfield.
-            // If there is none, the string field is the last field in the header.
-            let forwarded_for = if let Some(for_end) = forwarded[for_start..].find(';') {
-                &forwarded[for_start..for_start + for_end]
-            } else {
-                &forwarded[for_start..forwarded.len()]
-            };
+        .map(|x| x.to_str().unwrap_or(""))
+        .unwrap_or("");
 
-            let forwarded_for_appended = format!("{}, for={}", forwarded_for, peer);
-
-            // Now we have to place this newly appended list of items back into the header.
-            forwarded.replace(forwarded_for, &forwarded_for_appended)
-        } else {
-            // This is for the case in which the is a Forwarded header but it doesn't have a `for`
-            // subfield.
-            format!("for={}", peer)
-        }
+    let forwarded_header = ForwardedHeader::from_info(
+        &peer,
+        &args.listen.ip().to_string(),
+        forwarded,
+        host,
+        protocol,
+    );
+    let via = if let Some(via) = req.headers().get("via").map(|x| x.to_str().unwrap_or("")) {
+        format!("{}, HTTP/1.1 proxyboi", via)
     } else {
-        // This is for the case where there is no Forwarded header yet at all.
-        format!("for={}", peer)
+        format!("HTTP/1.1 proxyboi")
     };
 
     // The X-Forwarded-For header is much simpler to handle :)
+    dbg!(req.headers().get("via"));
     let x_forwarded_for = req
         .headers()
         .get("x-forwarded-for")
@@ -98,13 +75,15 @@ fn forward(
         .request_from(new_url.as_str(), req.head())
         .no_decompress()
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
-        .set_header("forwarded", forwarded_appended)
+        .set_header("forwarded", forwarded_header.to_string())
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto
         .set_header("x-forwarded-proto", protocol)
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host
         .set_header("x-forwarded-host", host)
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
-        .set_header("x-forwarded-for", x_forwarded_for_appended);
+        .set_header("x-forwarded-for", x_forwarded_for_appended)
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Via
+        .set_header("via", via);
 
     forwarded_req
         .send_stream(payload)
@@ -129,10 +108,11 @@ fn main() -> std::io::Result<()> {
     let mut server = HttpServer::new(move || {
         App::new()
             .data(Client::new())
-            .data(args_.upstream.clone())
+            .data(args_.clone())
             .wrap(middleware::Logger::default())
             .default_service(web::route().to_async(forward))
     });
+
     // TODO: This conditional is kinda dirty but it'll have to do until we have stable if let chains.
     if args.tls_cert.is_some() && args.tls_key.is_some() {
         let tls_cert = args.tls_cert.unwrap();
