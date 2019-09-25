@@ -20,6 +20,10 @@ You can also feed your TLS certificates into it:
 
     proxyboi -l 0.0.0.0:8080 --cert mycert.pem --key mykey.key http://example.com
 
+You can see a detailed (and pretty!) verbose log using `-v`:
+
+    proxyboi -l 0.0.0.0:8080 http://example.com -v
+
 ## Releasing
 
 This is mostly a note for me on how to release this thing:
