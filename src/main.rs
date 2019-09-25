@@ -143,6 +143,8 @@ fn forward(
 
 fn main() -> std::io::Result<()> {
     #[cfg(windows)]
+    use yansi::Paint;
+    #[cfg(windows)]
     Paint::enable_windows_ascii();
 
     let args = ProxyboiConfig::from_args();
