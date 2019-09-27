@@ -1,12 +1,11 @@
 use actix_web::client::{Client, ClientBuilder, Connector};
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 use futures::Future;
-use log::{info, error, trace};
+use log::{error, info, trace};
 use rustls::{
     Certificate, ClientConfig, NoClientAuth, RootCertStore, ServerCertVerified, ServerCertVerifier,
     ServerConfig, TLSError,
 };
-use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
 use std::sync::Arc;
@@ -172,12 +171,17 @@ fn main() -> std::io::Result<()> {
     let args = ProxyboiConfig::from_args();
 
     if !args.quiet {
-        TermLogger::init(
-            LevelFilter::Info,
-            Config::default(),
-            TerminalMode::default(),
-        )
-        .map_err(|x| IoError::new(IoErrorKind::Other, x.to_string()))?;
+        if let Err(_) = simplelog::TermLogger::init(
+            simplelog::LevelFilter::Info,
+            simplelog::Config::default(),
+            simplelog::TerminalMode::Mixed,
+        ) {
+            simplelog::SimpleLogger::init(
+                simplelog::LevelFilter::Info,
+                simplelog::Config::default(),
+            )
+            .expect("Couldn't initialize logger")
+        }
     }
 
     let args_ = args.clone();
