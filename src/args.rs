@@ -23,10 +23,9 @@ pub struct ProxyboiConfig {
     #[structopt(short, long, default_value = "0.0.0.0:8080")]
     pub listen: SocketAddr,
 
-    // TODO
-    // /// Allow connections against upstream proxies with invalid TLS signatures
-    // #[structopt(short = "k", long)]
-    // pub insecure: bool,
+    /// Allow connections against upstream proxies with invalid TLS certificates
+    #[structopt(short = "k", long)]
+    pub insecure: bool,
 
     /// Be quiet (log nothing)
     #[structopt(short, long)]

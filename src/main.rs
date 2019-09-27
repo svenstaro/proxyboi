@@ -1,11 +1,15 @@
-use actix_web::client::Client;
+use actix_web::client::{Client, ClientBuilder, Connector};
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
 use futures::Future;
-use log::info;
-use rustls::{NoClientAuth, ServerConfig};
+use log::{info, error, trace};
+use rustls::{
+    Certificate, ClientConfig, NoClientAuth, RootCertStore, ServerCertVerified, ServerCertVerifier,
+    ServerConfig, TLSError,
+};
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
+use std::sync::Arc;
 use structopt::StructOpt;
 
 mod args;
@@ -99,7 +103,10 @@ fn forward(
 
     upstream_req
         .send_stream(payload)
-        .map_err(actix_web::Error::from)
+        .map_err(|x| {
+            error!("{}", x);
+            actix_web::Error::from(x)
+        })
         .map(move |upstream_resp| {
             let upstream_response_log =
                 log_upstream_response(&upstream_resp, new_url.as_str(), args.verbose);
@@ -141,6 +148,21 @@ fn forward(
         })
 }
 
+struct NoVerifier;
+
+impl ServerCertVerifier for NoVerifier {
+    fn verify_server_cert(
+        &self,
+        _roots: &RootCertStore,
+        _presented_certs: &[Certificate],
+        dns_name: webpki::DNSNameRef,
+        _ocsp_response: &[u8],
+    ) -> Result<ServerCertVerified, TLSError> {
+        trace!("decoding dns: {:#?}", dns_name);
+        Ok(ServerCertVerified::assertion())
+    }
+}
+
 fn main() -> std::io::Result<()> {
     #[cfg(windows)]
     use yansi::Paint;
@@ -160,8 +182,18 @@ fn main() -> std::io::Result<()> {
 
     let args_ = args.clone();
     let mut server = HttpServer::new(move || {
+        let client = if args_.insecure {
+            let mut client_config = ClientConfig::new();
+            client_config
+                .dangerous()
+                .set_certificate_verifier(Arc::new(NoVerifier {}));
+            let connector = Connector::new().rustls(Arc::new(client_config)).finish();
+            ClientBuilder::new().connector(connector).finish()
+        } else {
+            Client::new()
+        };
         App::new()
-            .data(Client::new())
+            .data(client)
             .data(args_.clone())
             .default_service(web::route().to_async(forward))
     });

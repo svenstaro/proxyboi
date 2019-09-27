@@ -1,3 +1,7 @@
+# 0.4.0
+
+- Add option (`-k`/`--insecure`) to allow connecting to insecure TLS upstreams
+
 # 0.3.0
 
 - Add verbose logging option (#2)
