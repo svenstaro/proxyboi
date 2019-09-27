@@ -170,18 +170,19 @@ fn main() -> std::io::Result<()> {
 
     let args = ProxyboiConfig::from_args();
 
-    if !args.quiet {
-        if let Err(_) = simplelog::TermLogger::init(
-            simplelog::LevelFilter::Info,
-            simplelog::Config::default(),
-            simplelog::TerminalMode::Mixed,
-        ) {
-            simplelog::SimpleLogger::init(
-                simplelog::LevelFilter::Info,
-                simplelog::Config::default(),
-            )
+    let log_level = if args.quiet {
+        simplelog::LevelFilter::Error
+    } else {
+        simplelog::LevelFilter::Info
+    };
+
+    if let Err(_) = simplelog::TermLogger::init(
+        log_level,
+        simplelog::Config::default(),
+        simplelog::TerminalMode::Mixed,
+    ) {
+        simplelog::SimpleLogger::init(log_level, simplelog::Config::default())
             .expect("Couldn't initialize logger")
-        }
     }
 
     let args_ = args.clone();
