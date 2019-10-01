@@ -1,4 +1,4 @@
-# 0.4.0 (unreleased)
+# 0.4.0 (released on 2019-10-01)
 
 - Add option (`-k`/`--insecure`) to allow connecting to insecure TLS upstreams
 - Allow logging to work if not run with an allocated terminal
