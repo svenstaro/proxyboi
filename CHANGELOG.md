@@ -1,3 +1,11 @@
+# 0.4.1 (released on 2019-10-09)
+
+- Fix body forwarding behavior to always receive the whole body first.
+  This might come back later to bite us with HTTP/2, HTTP/3 or websockets but
+  for now gets rid of a problem where `awc` would send both `Content-Length`
+  and `Transfer-Encoding` at the same time which is forbidden by
+  https://tools.ietf.org/html/rfc7230#section-3.3.2
+
 # 0.4.0 (released on 2019-10-01)
 
 - Add option (`-k`/`--insecure`) to allow connecting to insecure TLS upstreams

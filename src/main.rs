@@ -25,7 +25,7 @@ use crate::utils::ForwardedHeader;
 
 fn forward(
     req: HttpRequest,
-    payload: web::Payload,
+    body: web::Bytes,
     args: web::Data<ProxyboiConfig>,
     client: web::Data<Client>,
 ) -> impl Future<Item = HttpResponse, Error = actix_web::Error> {
@@ -101,7 +101,7 @@ fn forward(
     let upstream_request_log = log_upstream_request(&upstream_req, args.verbose);
 
     upstream_req
-        .send_stream(payload)
+        .send_body(body)
         .map_err(|x| {
             error!("{}", x);
             actix_web::Error::from(x)
@@ -116,7 +116,9 @@ fn forward(
             for (header_name, header_value) in upstream_resp
                 .headers()
                 .iter()
-                .filter(|(h, _)| *h != "connection" && *h != "content-length")
+                // Remove `Connection` as per
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection#Directives
+                .filter(|(h, _)| *h != "connection")
             {
                 resp_for_logging.header(header_name.clone(), header_value.clone());
             }
@@ -127,12 +129,13 @@ fn forward(
                 args.verbose,
             );
 
-            // We need to manually clone this in order to log it.
             let mut resp = HttpResponse::build(upstream_resp.status());
             for (header_name, header_value) in upstream_resp
                 .headers()
                 .iter()
-                .filter(|(h, _)| *h != "connection" && *h != "content-length")
+                // Remove `Connection` as per
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection#Directives
+                .filter(|(h, _)| *h != "connection")
             {
                 resp.header(header_name.clone(), header_value.clone());
             }
