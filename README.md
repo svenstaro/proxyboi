@@ -24,6 +24,8 @@ You can see a detailed (and pretty!) verbose log using `-v`:
 
     proxyboi -l 0.0.0.0:8080 http://example.com -v
 
+![Pretty log](pretty_log.png)
+
 ## Releasing
 
 This is mostly a note for me on how to release this thing:
