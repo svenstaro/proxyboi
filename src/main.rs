@@ -1,5 +1,6 @@
 use actix_web::client::{Client, ClientBuilder, Connector};
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
+use futures::stream::Stream;
 use futures::Future;
 use log::{error, info, trace};
 use rustls::{
@@ -106,7 +107,7 @@ fn forward(
             error!("{}", x);
             actix_web::Error::from(x)
         })
-        .map(move |upstream_resp| {
+        .map(move |mut upstream_resp| {
             let upstream_response_log =
                 log_upstream_response(&upstream_resp, new_url.as_str(), args.verbose);
 
@@ -146,8 +147,14 @@ fn forward(
                 upstream_resp = upstream_response_log,
                 outgoing_resp = outgoing_response_log
             );
-            resp.streaming(upstream_resp)
+            upstream_resp
+                .body()
+                .into_stream()
+                .concat2()
+                .map(move |b| resp.body(b))
+                .map_err(|e| e.into())
         })
+        .flatten()
 }
 
 struct NoVerifier;
