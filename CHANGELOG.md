@@ -1,3 +1,8 @@
+# 0.4.2 (released on 2019-11-15)
+
+- Never send `transfer-encoding: chunked` when receiving a body.
+  Wait for the body to complete and then just send a proper response with `content-length`.
+
 # 0.4.1 (released on 2019-10-09)
 
 - Fix body forwarding behavior to always receive the whole body first.
