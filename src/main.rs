@@ -119,7 +119,7 @@ fn forward(
                 .iter()
                 // Remove `Connection` as per
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection#Directives
-                .filter(|(h, _)| *h != "connection")
+                .filter(|(h, _)| *h != "connection" && *h != "transfer-encoding")
             {
                 resp_for_logging.header(header_name.clone(), header_value.clone());
             }
@@ -136,7 +136,7 @@ fn forward(
                 .iter()
                 // Remove `Connection` as per
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection#Directives
-                .filter(|(h, _)| *h != "connection")
+                .filter(|(h, _)| *h != "connection" && *h != "transfer-encoding")
             {
                 resp.header(header_name.clone(), header_value.clone());
             }
@@ -149,6 +149,7 @@ fn forward(
             );
             upstream_resp
                 .body()
+                .limit(1_000_000_000)
                 .into_stream()
                 .concat2()
                 .map(move |b| resp.body(b))
@@ -210,6 +211,7 @@ fn main() -> std::io::Result<()> {
             Client::new()
         };
         App::new()
+            .data(web::PayloadConfig::new(1_000_000_000))
             .data(client)
             .data(args_.clone())
             .default_service(web::route().to_async(forward))
