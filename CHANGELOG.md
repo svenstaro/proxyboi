@@ -1,3 +1,8 @@
+# 0.4.3 (released on 2020-02-06)
+
+- Automatic Docker tags per git tag
+- Lockfile bumps
+
 # 0.4.2 (released on 2019-11-15)
 
 - Never send `transfer-encoding: chunked` when receiving a body.
