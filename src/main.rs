@@ -82,7 +82,7 @@ fn forward(
     let x_forwarded_for_appended = if let Some(x_forwarded_for) = x_forwarded_for {
         format!("{}, {}", x_forwarded_for, peer)
     } else {
-        peer.clone()
+        peer
     };
 
     let upstream_req = client
