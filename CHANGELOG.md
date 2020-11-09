@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+- Modernize CI and publish workflows.
 
 ## [0.4.3] - 2020-02-06
 - Automatic Docker tags per git tag
