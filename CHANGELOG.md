@@ -10,9 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased] - ReleaseDate
 - Modernize CI and publish workflows.
 
-## [0.4.3] - 2020-02-06
+## [0.4.4] - 2020-11-09
 - Automatic Docker tags per git tag
 - Lockfile bumps
+
+## [0.4.3] - 2020-02-06
+- Increase sending/receiving body limit to 1G
 
 ## [0.4.2] - 2019-11-15
 - Never send `transfer-encoding: chunked` when receiving a body.
