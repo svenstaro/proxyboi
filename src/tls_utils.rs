@@ -3,10 +3,10 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Load a certificate from `filename`.
-pub fn load_cert(filename: &PathBuf) -> std::io::Result<Vec<rustls::Certificate>> {
+pub fn load_cert(filename: &Path) -> std::io::Result<Vec<rustls::Certificate>> {
     let certfile = File::open(filename)?;
     let mut reader = BufReader::new(certfile);
     certs(&mut reader)
@@ -14,7 +14,7 @@ pub fn load_cert(filename: &PathBuf) -> std::io::Result<Vec<rustls::Certificate>
 }
 
 /// Load a private key from `filename`.
-pub fn load_private_key(filename: &PathBuf) -> std::io::Result<rustls::PrivateKey> {
+pub fn load_private_key(filename: &Path) -> std::io::Result<rustls::PrivateKey> {
     let rsa_keys = {
         let keyfile = File::open(filename)?;
         let mut reader = BufReader::new(keyfile);
