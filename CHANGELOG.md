@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+- Allow to specify connection timeout via --timeout [#80](https://github.com/svenstaro/proxyboi/pull/80) (thanks @holgzn)
 - Modernize CI and publish workflows.
 
 ## [0.4.4] - 2020-11-09
