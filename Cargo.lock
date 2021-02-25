@@ -1598,7 +1598,7 @@ dependencies = [
 
 [[package]]
 name = "proxyboi"
-version = "0.4.5-alpha.0"
+version = "0.4.5"
 dependencies = [
  "Inflector",
  "actix-http 1.0.1",
