@@ -10,6 +10,7 @@ use rustls::{
 use std::io::Error as IoError;
 use std::io::ErrorKind as IoErrorKind;
 use std::sync::Arc;
+use std::time::Duration;
 use structopt::StructOpt;
 
 mod args;
@@ -200,16 +201,21 @@ fn main() -> std::io::Result<()> {
 
     let args_ = args.clone();
     let mut server = HttpServer::new(move || {
-        let client = if args_.insecure {
+        let connector = if args_.insecure {
             let mut client_config = ClientConfig::new();
             client_config
                 .dangerous()
                 .set_certificate_verifier(Arc::new(NoVerifier {}));
-            let connector = Connector::new().rustls(Arc::new(client_config)).finish();
-            ClientBuilder::new().connector(connector).finish()
+            Connector::new()
+                .rustls(Arc::new(client_config))
+                .timeout(Duration::from_secs(args_.timeout))
+                .finish()
         } else {
-            Client::new()
+            Connector::new()
+                .timeout(Duration::from_secs(args_.timeout))
+                .finish()
         };
+        let client = ClientBuilder::new().connector(connector).finish();
         App::new()
             .data(web::PayloadConfig::new(1_000_000_000))
             .data(client)
