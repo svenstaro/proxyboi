@@ -42,9 +42,10 @@ You can see a detailed (and pretty!) verbose log using `-v`:
         -v, --verbose     Be verbose (log data of incoming and outgoing requests)
 
     OPTIONS:
-        -l, --listen <listen>    Socket to listen on [default: 0.0.0.0:8080]
-            --cert <tls-cert>    TLS cert to use
-            --key <tls-key>      TLS key to use
+        -l, --listen <listen>      Socket to listen on [default: 0.0.0.0:8080]
+            --timeout <timeout>    Connection timeout against upstream in seconds (including DNS name resolution) [default: 5]
+            --cert <tls-cert>      TLS cert to use
+            --key <tls-key>        TLS key to use
 
     ARGS:
         <upstream>    Upstream proxy to use (eg. http://localhost:8080)

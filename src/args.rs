@@ -39,6 +39,10 @@ pub struct ProxyboiConfig {
     #[structopt(parse(try_from_str = from_url))]
     pub upstream: Url,
 
+    /// Connection timeout against upstream in seconds (including DNS name resolution)
+    #[structopt(long, default_value = "5")]
+    pub timeout: u64,
+
     /// TLS cert to use
     #[structopt(long = "cert", requires = "tls-key")]
     pub tls_cert: Option<PathBuf>,
