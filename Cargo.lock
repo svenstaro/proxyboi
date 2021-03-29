@@ -1612,7 +1612,7 @@ version = "0.4.6-alpha.0"
 dependencies = [
  "Inflector",
  "actix-http 1.0.1",
- "actix-service 0.4.2",
+ "actix-service 1.0.6",
  "actix-web",
  "chrono",
  "futures 0.1.31",
