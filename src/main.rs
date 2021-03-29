@@ -192,6 +192,7 @@ fn main() -> std::io::Result<()> {
         log_level,
         simplelog::Config::default(),
         simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto,
     )
     .is_err()
     {
