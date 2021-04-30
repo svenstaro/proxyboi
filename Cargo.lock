@@ -1616,7 +1616,7 @@ dependencies = [
  "actix-service 0.4.2",
  "actix-web",
  "chrono",
- "futures 0.1.31",
+ "futures 0.3.14",
  "log",
  "pretty_assertions",
  "rustls",
