@@ -51,8 +51,9 @@ pub fn log_incoming_request(req: &HttpRequest, verbose: bool) -> String {
         );
         format!(
             "Connection from {remote} at {time}\n{req_banner} from {remote_pretty}\n{req_info}",
-            remote = conn_info.remote().unwrap_or("unknown"),
-            remote_pretty = Paint::magenta(conn_info.remote().unwrap_or("unknown")).bold(),
+            remote = conn_info.realip_remote_addr().unwrap_or("unknown"),
+            remote_pretty =
+                Paint::magenta(conn_info.realip_remote_addr().unwrap_or("unknown")).bold(),
             time = time,
             req_banner = Paint::green("┌─Incoming request").bold(),
             req_info = req_info,
@@ -60,7 +61,7 @@ pub fn log_incoming_request(req: &HttpRequest, verbose: bool) -> String {
     } else {
         format!(
             "Connection from {remote} at {time}",
-            remote = conn_info.remote().unwrap_or("unknown"),
+            remote = conn_info.realip_remote_addr().unwrap_or("unknown"),
             time = time
         )
     }

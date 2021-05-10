@@ -10,10 +10,6 @@ keywords = ["reverse-proxy", "proxy", "https", "ssl", "tls"]
 categories = ["command-line-utilities", "network-programming"]
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "svenstaro/proxyboi", branch = "master" }
-maintenance = { status = "actively-developed" }
-
 [profile.release]
 lto = true
 opt-level = 'z'
@@ -21,20 +17,22 @@ codegen-units = 1
 panic = 'abort'
 
 [dependencies]
-actix-web = { version= "1.0", features = ["rust-tls"] }
-actix-service = "0.4"
-actix-http = "1.0"
-simplelog = "0.10"
+clap = { version = "3.0.0-beta.2", features = ["wrap_help"] }
+actix-web = { version= "3", features = ["rustls"] }
+# simplelog = "0.10"
 log = "0.4"
-futures = "0.1.29"
+futures = "0.3"
 chrono = "0.4"
-structopt = "0.3"
-url = "2.2"
-pretty_assertions = "0.7"
+url = "2"
 yansi = "0.5"
 Inflector = "0.11"
-webpki = "0.19"
+thiserror = "1"
+anyhow = "1"
+# webpki = "0.19"
 
-[dependencies.rustls]
-version = "0.15"
-features = ["dangerous_configuration"]
+[dev-dependencies]
+pretty_assertions = "0.7"
+
+# [dependencies.rustls]
+# version = "0.15"
+# features = ["dangerous_configuration"]
