@@ -1,7 +1,29 @@
+use actix_web::http::{HeaderMap, HeaderName, HeaderValue};
 use clap::Clap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use url::Url;
+
+/// Parse a header given in a string format into a `HeaderMap`
+///
+/// Headers are expected to be in format "key:value".
+fn parse_header(header: &str) -> Result<HeaderMap, String> {
+    let header: Vec<&str> = header.split(':').collect();
+    if header.len() != 2 {
+        return Err("Wrong header format (see --help for format)".to_string());
+    }
+
+    let (header_name, header_value) = (header[0], header[1]);
+
+    let hn = HeaderName::from_lowercase(header_name.to_lowercase().as_bytes())
+        .map_err(|e| e.to_string())?;
+
+    let hv = HeaderValue::from_str(header_value).map_err(|e| e.to_string())?;
+
+    let mut map = HeaderMap::new();
+    map.insert(hn, hv);
+    Ok(map)
+}
 
 #[derive(Clap, Clone)]
 #[clap(
@@ -27,9 +49,17 @@ pub struct ProxyboiConfig {
     #[clap(short, long)]
     pub verbose: bool,
 
-    /// Upstream proxy to use (eg. http://localhost:8080)
+    /// Upstream server to proxy to (eg. http://localhost:8080)
     #[clap()]
     pub upstream: Url,
+
+    /// Additional headers to send to upstream server
+    #[clap(long, parse(try_from_str = parse_header))]
+    pub upstream_header: Vec<HeaderMap>,
+
+    /// Additional response headers to send to requesting client
+    #[clap(long, parse(try_from_str = parse_header))]
+    pub response_header: Vec<HeaderMap>,
 
     /// Connection timeout against upstream in seconds (including DNS name resolution)
     #[clap(long, default_value = "5")]

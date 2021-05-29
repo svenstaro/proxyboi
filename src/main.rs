@@ -3,11 +3,9 @@ mod error;
 mod forwarded_header;
 mod logging;
 
-use actix_web::{
-    client::Client, dev::Service, middleware, web, App, HttpRequest, HttpResponse, HttpServer,
-};
+use actix_web::{client::Client, dev::Service, web, App, HttpRequest, HttpResponse, HttpServer};
 use clap::Clap;
-use futures::{future::FutureExt, TryFutureExt};
+use futures::future::FutureExt;
 use log::info;
 
 use crate::config::ProxyboiConfig;
@@ -96,6 +94,12 @@ async fn forward(
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Via
         .set_header("via", via);
 
+    // Insert additional headers for upstream server request.
+    // for additional_header in &config.upstream_headers {
+    //     let additional_header = additional_header.iter().first();
+    //     upstream_req.set_header(additional_header, header_value);
+    // }
+
     let upstream_request_log = log_upstream_request(&upstream_req, config.verbose);
 
     let mut upstream_resp = upstream_req.send_body(body).await?;
@@ -135,7 +139,32 @@ async fn forward(
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    #[cfg(windows)]
+    use yansi::Paint;
+    #[cfg(windows)]
+    Paint::enable_windows_ascii();
+
     let config = ProxyboiConfig::parse();
+
+    let log_level = if config.quiet {
+        simplelog::LevelFilter::Error
+    } else {
+        simplelog::LevelFilter::Info
+    };
+
+    if simplelog::TermLogger::init(
+        log_level,
+        simplelog::Config::default(),
+        simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto,
+    )
+    .is_err()
+    {
+        simplelog::SimpleLogger::init(log_level, simplelog::Config::default())
+            .expect("Couldn't initialize logger")
+    }
+
+    let config_ = config.clone();
     HttpServer::new(move || {
         App::new()
             .data(Client::new())
@@ -150,7 +179,7 @@ async fn main() -> std::io::Result<()> {
             })
             .default_service(web::route().to(forward))
     })
-    .bind("127.0.0.1:8443")?
+    .bind(config_.listen)?
     .run()
     .await
 }

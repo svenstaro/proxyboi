@@ -1306,6 +1306,7 @@ dependencies = [
  "futures",
  "log",
  "pretty_assertions",
+ "simplelog",
  "thiserror",
  "url",
  "yansi",
@@ -1546,6 +1547,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16f1d0fef1604ba8f7a073c7e701f213e056707210e9020af4528e0101ce11a6"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "simplelog"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59d0fe306a0ced1c88a58042dc22fc2ddd000982c26d75f6aa09a394547c41e0"
+dependencies = [
+ "chrono",
+ "log",
+ "termcolor",
 ]
 
 [[package]]

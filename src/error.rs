@@ -1,9 +1,4 @@
-use actix_web::{
-    client::{ClientResponse, SendRequestError},
-    error::PayloadError,
-    http::StatusCode,
-    HttpResponse, ResponseError,
-};
+use actix_web::{client::SendRequestError, error::PayloadError, HttpResponse, ResponseError};
 use log::error;
 use thiserror::Error;
 
