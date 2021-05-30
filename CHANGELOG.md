@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+- Upgraded to actix-web 3
+- Added `--respons-header` to add additional headers to the final response returned to the client
+- Added `--upstream-header` to add additional headers to the request towards the proxied upstream service
 
 ## [0.4.5] - 2021-02-25
 - Allow to specify connection timeout via --timeout [#80](https://github.com/svenstaro/proxyboi/pull/80) (thanks @holgzn)
