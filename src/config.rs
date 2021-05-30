@@ -28,6 +28,7 @@ fn parse_header(header: &str) -> Result<HeaderMap, String> {
 #[derive(Clap, Debug, Clone)]
 #[clap(
     name = "proxyboi",
+    version,
     author,
     about,
     setting = clap::AppSettings::ColoredHelp,

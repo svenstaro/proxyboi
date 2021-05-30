@@ -27,28 +27,35 @@ You can see a detailed (and pretty!) verbose log using `-v`:
 
 ## Usage
 
-    proxyboi 0.4.5
+    proxyboi 0.4.6-alpha.0
     Sven-Hendrik Haase <svenstaro@gmail.com>
     A super simple reverse proxy with TLS support
 
     USAGE:
         proxyboi [FLAGS] [OPTIONS] <upstream>
 
+    ARGS:
+        <upstream>    Upstream server to proxy to (eg. http://localhost:8080)
+
     FLAGS:
         -h, --help        Prints help information
         -k, --insecure    Allow connections against upstream proxies with invalid TLS certificates
         -q, --quiet       Be quiet (log nothing)
-        -V, --version     Prints version information
         -v, --verbose     Be verbose (log data of incoming and outgoing requests)
+        -V, --version     Prints version information
 
     OPTIONS:
-        -l, --listen <listen>      Socket to listen on [default: 0.0.0.0:8080]
-            --timeout <timeout>    Connection timeout against upstream in seconds (including DNS name resolution) [default: 5]
-            --cert <tls-cert>      TLS cert to use
-            --key <tls-key>        TLS key to use
+        -l, --listen <listen>                          Socket to listen on [default: 0.0.0.0:8080]
+            --response-header <response-headers>...
+                Additional response headers to send to requesting client
 
-    ARGS:
-        <upstream>    Upstream proxy to use (eg. http://localhost:8080)
+            --timeout <timeout>
+                Connection timeout against upstream in seconds (including DNS name resolution)
+                [default: 5]
+
+            --cert <tls-cert>                          TLS cert to use
+            --key <tls-key>                            TLS key to use
+            --upstream-header <upstream-headers>...    Additional headers to send to upstream server
 
 ## Releasing
 
