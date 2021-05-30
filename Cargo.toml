@@ -28,11 +28,8 @@ yansi = "0.5"
 Inflector = "0.11"
 thiserror = "1"
 anyhow = "1"
-# webpki = "0.19"
+webpki = "0.21"
+rustls = { version = "0.18", features = ["dangerous_configuration"] }
 
 [dev-dependencies]
 pretty_assertions = "0.7"
-
-# [dependencies.rustls]
-# version = "0.15"
-# features = ["dangerous_configuration"]

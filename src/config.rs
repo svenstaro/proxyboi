@@ -15,17 +15,17 @@ fn parse_header(header: &str) -> Result<HeaderMap, String> {
 
     let (header_name, header_value) = (header[0], header[1]);
 
-    let hn = HeaderName::from_lowercase(header_name.to_lowercase().as_bytes())
+    let hn = HeaderName::from_lowercase(header_name.trim().to_lowercase().as_bytes())
         .map_err(|e| e.to_string())?;
 
-    let hv = HeaderValue::from_str(header_value).map_err(|e| e.to_string())?;
+    let hv = HeaderValue::from_str(header_value.trim()).map_err(|e| e.to_string())?;
 
     let mut map = HeaderMap::new();
     map.insert(hn, hv);
     Ok(map)
 }
 
-#[derive(Clap, Clone)]
+#[derive(Clap, Debug, Clone)]
 #[clap(
     name = "proxyboi",
     author,
@@ -54,12 +54,12 @@ pub struct ProxyboiConfig {
     pub upstream: Url,
 
     /// Additional headers to send to upstream server
-    #[clap(long, parse(try_from_str = parse_header))]
-    pub upstream_header: Vec<HeaderMap>,
+    #[clap(long = "upstream-header", parse(try_from_str = parse_header))]
+    pub upstream_headers: Vec<HeaderMap>,
 
     /// Additional response headers to send to requesting client
-    #[clap(long, parse(try_from_str = parse_header))]
-    pub response_header: Vec<HeaderMap>,
+    #[clap(long = "response-header", parse(try_from_str = parse_header))]
+    pub response_headers: Vec<HeaderMap>,
 
     /// Connection timeout against upstream in seconds (including DNS name resolution)
     #[clap(long, default_value = "5")]

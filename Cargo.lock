@@ -1306,9 +1306,11 @@ dependencies = [
  "futures",
  "log",
  "pretty_assertions",
+ "rustls",
  "simplelog",
  "thiserror",
  "url",
+ "webpki",
  "yansi",
 ]
 
