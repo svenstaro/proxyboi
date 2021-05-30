@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+
+## [0.5.0] - 2021-05-30
 - Upgraded to actix-web 3
 - Added `--respons-header` to add additional headers to the final response returned to the client
 - Added `--upstream-header` to add additional headers to the request towards the proxied upstream service
@@ -45,7 +47,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - First proper release
 
 <!-- next-url -->
-[Unreleased]: https://github.com/svenstaro/proxyboi/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/svenstaro/proxyboi/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/svenstaro/proxyboi/compare/v0.4.5...v0.5.0
 [0.4.5]: https://github.com/svenstaro/proxyboi/compare/0.4.4...v0.4.5
 [0.4.4]: https://github.com/svenstaro/proxyboi/compare/0.4.3...0.4.4
 [0.4.3]: https://github.com/svenstaro/proxyboi/compare/0.4.2...0.4.3

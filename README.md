@@ -27,7 +27,7 @@ You can see a detailed (and pretty!) verbose log using `-v`:
 
 ## Usage
 
-    proxyboi 0.4.6-alpha.0
+    proxyboi 0.5.0
     Sven-Hendrik Haase <svenstaro@gmail.com>
     A super simple reverse proxy with TLS support
 
