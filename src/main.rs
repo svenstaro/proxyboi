@@ -9,9 +9,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use actix_web::client::{ClientBuilder, Connector};
-use actix_web::{dev::Service, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use clap::Clap;
-use futures::future::FutureExt;
 use log::trace;
 use rustls::{
     Certificate, ClientConfig, NoClientAuth, RootCertStore, ServerCertVerified, ServerCertVerifier,
@@ -85,14 +84,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(client)
             .data(config.clone())
-            .wrap_fn(|req, srv| {
-                dbg!("request");
-
-                srv.call(req).map(|res| {
-                    dbg!("response");
-                    res
-                })
-            })
             .default_service(web::route().to(handler::forward))
     });
 
