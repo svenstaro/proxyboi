@@ -43,7 +43,7 @@ dependencies = [
  "futures-util",
  "http",
  "log",
- "rustls",
+ "rustls 0.18.1",
  "tokio-rustls",
  "trust-dns-proto",
  "trust-dns-resolver",
@@ -205,7 +205,7 @@ dependencies = [
  "actix-service",
  "actix-utils",
  "futures-util",
- "rustls",
+ "rustls 0.18.1",
  "tokio-rustls",
  "webpki",
  "webpki-roots",
@@ -261,7 +261,7 @@ dependencies = [
  "mime",
  "pin-project 1.0.7",
  "regex",
- "rustls",
+ "rustls 0.18.1",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -359,7 +359,7 @@ dependencies = [
  "mime",
  "percent-encoding",
  "rand",
- "rustls",
+ "rustls 0.18.1",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -1306,7 +1306,7 @@ dependencies = [
  "futures",
  "log",
  "pretty_assertions",
- "rustls",
+ "rustls 0.19.1",
  "simplelog",
  "thiserror",
  "url",
@@ -1437,6 +1437,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d1126dcf58e93cee7d098dbda643b5f92ed724f1f6a63007c1116eed6700c81"
 dependencies = [
  "base64 0.12.3",
+ "log",
+ "ring",
+ "sct",
+ "webpki",
+]
+
+[[package]]
+name = "rustls"
+version = "0.19.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
+dependencies = [
+ "base64 0.13.0",
  "log",
  "ring",
  "sct",
@@ -1815,7 +1828,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e12831b255bcfa39dc0436b01e19fea231a37db570686c06ee72c423479f889a"
 dependencies = [
  "futures-core",
- "rustls",
+ "rustls 0.18.1",
  "tokio",
  "webpki",
 ]
