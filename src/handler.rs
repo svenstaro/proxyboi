@@ -129,7 +129,7 @@ pub async fn forward(
 
     let outgoing_response_log = log_outgoing_response(
         &outgoing_resp,
-        &incoming_request
+        incoming_request
             .connection_info()
             .realip_remote_addr()
             .unwrap_or("unknown"),
