@@ -17,7 +17,7 @@ codegen-units = 1
 panic = 'abort'
 
 [dependencies]
-clap = { version = "3.0.0-beta.2", features = ["wrap_help"] }
+clap = { version = "3.0.0-beta.4", features = ["wrap_help"] }
 actix-web = { version= "3", features = ["rustls"] }
 simplelog = "0.10"
 log = "0.4"
