@@ -29,7 +29,7 @@ Inflector = "0.11"
 thiserror = "1"
 anyhow = "1"
 webpki = "0.21"
-rustls = { version = "0.18", features = ["dangerous_configuration"] }
+rustls = { version = "0.20", features = ["dangerous_configuration"] }
 
 [dev-dependencies]
 pretty_assertions = "1.0"
