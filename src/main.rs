@@ -10,7 +10,7 @@ use std::time::Duration;
 
 use actix_web::client::{ClientBuilder, Connector};
 use actix_web::{web, App, HttpServer};
-use clap::Clap;
+use clap::Parser;
 use log::trace;
 use rustls::{
     Certificate, ClientConfig, NoClientAuth, RootCertStore, ServerCertVerified, ServerCertVerifier,

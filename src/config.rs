@@ -1,5 +1,5 @@
 use actix_web::http::{HeaderMap, HeaderName, HeaderValue};
-use clap::Clap;
+use clap::Parser;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use url::Url;
@@ -25,14 +25,8 @@ fn parse_header(header: &str) -> Result<HeaderMap, String> {
     Ok(map)
 }
 
-#[derive(Clap, Debug, Clone)]
-#[clap(
-    name = "proxyboi",
-    version,
-    author,
-    about,
-    setting = clap::AppSettings::ColoredHelp,
-)]
+#[derive(Parser, Debug, Clone)]
+#[clap(name = "proxyboi", version, author, about)]
 pub struct ProxyboiConfig {
     /// Socket to listen on
     #[clap(short, long, default_value = "0.0.0.0:8080")]
