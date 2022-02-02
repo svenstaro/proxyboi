@@ -28,7 +28,7 @@ yansi = "0.5"
 Inflector = "0.11"
 thiserror = "1"
 anyhow = "1"
-webpki = "0.21"
+webpki = "0.22"
 rustls = { version = "0.18", features = ["dangerous_configuration"] }
 
 [dev-dependencies]
