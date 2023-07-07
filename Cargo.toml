@@ -32,4 +32,4 @@ webpki = "0.21"
 rustls = { version = "0.18", features = ["dangerous_configuration"] }
 
 [dev-dependencies]
-pretty_assertions = "1.1"
+pretty_assertions = "1.4"
