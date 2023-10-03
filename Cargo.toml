@@ -8,7 +8,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["reverse-proxy", "proxy", "https", "ssl", "tls"]
 categories = ["command-line-utilities", "network-programming"]
-edition = "2018"
+edition = "2021"
 
 [profile.release]
 lto = true
