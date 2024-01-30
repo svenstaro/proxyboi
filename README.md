@@ -12,6 +12,16 @@
 
 **A super simple reverse proxy with TLS support**
 
+## Installation
+
+With [Rust installed](https://rustup.rs), use this command to install it:
+
+```sh
+cargo install proxyboi
+```
+
+You can also download binaries from the [latest release on GitHub](https://github.com/svenstaro/proxyboi/releases/latest).
+
 ## How to run
 
 In order to listen for proxy requests on all local interfaces on port 8080 and proxy them to a service running at example.com, do:
