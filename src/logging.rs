@@ -22,7 +22,7 @@ pub fn log_incoming_request(req: &HttpRequest, verbose: bool) -> String {
         let method_path_version_line = format!(
             "{method} {path_query} {http}/{version}",
             method = Paint::green(req.method()),
-            path_query = Paint::cyan(path_query).underline(),
+            path_query = path_query.cyan().underline(),
             http = Paint::blue("HTTP"),
             version = Paint::blue(
                 format!("{:?}", req.version())
@@ -37,7 +37,7 @@ pub fn log_incoming_request(req: &HttpRequest, verbose: bool) -> String {
             headers_vec.push(format!(
                 "{deco} {key}: {value}",
                 deco = Paint::green("│").bold(),
-                key = Paint::cyan(Inflector::to_train_case(hk.as_str())),
+                key = Inflector::to_train_case(hk.as_str()).cyan(),
                 value = hv.to_str().unwrap_or("<unprintable>")
             ));
         }
@@ -86,8 +86,8 @@ pub fn log_upstream_request(req: &ClientRequest, verbose: bool) -> String {
         for (hk, hv) in req.headers() {
             headers_vec.push(format!(
                 "{deco} {key}: {value}",
-                deco = Paint::cyan("│").bold(),
-                key = Paint::cyan(Inflector::to_train_case(hk.as_str())),
+                deco = "│".bold().cyan(),
+                key = Inflector::to_train_case(hk.as_str()).cyan(),
                 value = hv.to_str().unwrap_or("<unprintable>")
             ));
         }
@@ -95,14 +95,14 @@ pub fn log_upstream_request(req: &ClientRequest, verbose: bool) -> String {
         let headers = headers_vec.join("\n");
         let req_info = format!(
             "{deco} {method_path_line}\n{headers}",
-            deco = Paint::cyan("│").bold(),
+            deco = "│".bold().cyan(),
             method_path_line = method_path_version_line,
             headers = headers
         );
         format!(
             "{req_banner} to {uri}\n{req_info}",
-            req_banner = Paint::cyan("┌─Upstream request").bold(),
-            uri = Paint::yellow(req.get_uri()),
+            req_banner = "┌─Upstream request".bold().cyan(),
+            uri = req.get_uri().yellow(),
             req_info = req_info,
         )
     } else {
@@ -125,16 +125,16 @@ pub fn log_upstream_response<T>(
                     .nth(1)
                     .unwrap_or("unknown")
             ),
-            status_code = Paint::blue(resp.status().as_u16()),
-            status_text = Paint::cyan(resp.status().canonical_reason().unwrap_or("")),
+            status_code = resp.status().as_u16().blue(),
+            status_text = resp.status().canonical_reason().unwrap_or("").cyan(),
         );
 
         let mut headers_vec = vec![];
         for (hk, hv) in resp.headers() {
             headers_vec.push(format!(
                 "{deco} {key}: {value}",
-                deco = Paint::blue("│").bold(),
-                key = Paint::cyan(Inflector::to_train_case(hk.as_str())),
+                deco = "│".bold().blue(),
+                key = Inflector::to_train_case(hk.as_str()).cyan(),
                 value = hv.to_str().unwrap_or("<unprintable>")
             ));
         }
@@ -161,15 +161,14 @@ pub fn log_outgoing_response(resp: &HttpResponse, remote: &str, verbose: bool) -
     if verbose {
         let status_line = format!(
             "{http}/{version} {status_code} {status_text}",
-            http = Paint::blue("HTTP"),
-            version = Paint::blue(
-                format!("{:?}", resp.head().version)
-                    .split('/')
-                    .nth(1)
-                    .unwrap_or("unknown")
-            ),
-            status_code = Paint::blue(resp.status().as_u16()),
-            status_text = Paint::cyan(resp.status().canonical_reason().unwrap_or("")),
+            http = "HTTP".blue(),
+            version = format!("{:?}", resp.head().version)
+                .split('/')
+                .nth(1)
+                .unwrap_or("unknown")
+                .blue(),
+            status_code = resp.status().as_u16().blue(),
+            status_text = resp.status().canonical_reason().unwrap_or("").cyan(),
         );
 
         let mut headers_vec = vec![];
@@ -177,7 +176,7 @@ pub fn log_outgoing_response(resp: &HttpResponse, remote: &str, verbose: bool) -
             headers_vec.push(format!(
                 "{deco} {key}: {value}",
                 deco = Paint::red("│").bold(),
-                key = Paint::cyan(Inflector::to_train_case(hk.as_str())),
+                key = Inflector::to_train_case(hk.as_str()).cyan(),
                 value = hv.to_str().unwrap_or("<unprintable>")
             ));
         }
