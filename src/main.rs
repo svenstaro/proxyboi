@@ -1,4 +1,4 @@
-mod config;
+mod args;
 mod error;
 mod forwarded_header;
 mod handler;
@@ -17,7 +17,6 @@ use rustls::{
     ServerConfig, TLSError,
 };
 
-use crate::config::ProxyboiConfig;
 use crate::tls_utils::load_cert;
 use crate::tls_utils::load_private_key;
 
@@ -43,9 +42,9 @@ async fn main() -> std::io::Result<()> {
     #[cfg(windows)]
     Paint::enable_windows_ascii();
 
-    let config = ProxyboiConfig::parse();
+    let args = args::CliArgs::parse();
 
-    let log_level = if config.quiet {
+    let log_level = if args.quiet {
         simplelog::LevelFilter::Error
     } else {
         simplelog::LevelFilter::Info
@@ -63,40 +62,40 @@ async fn main() -> std::io::Result<()> {
             .expect("Couldn't initialize logger")
     }
 
-    let config_ = config.clone();
+    let args_ = args.clone();
     let mut http_server = HttpServer::new(move || {
-        let connector = if config.insecure {
+        let connector = if args.insecure {
             let mut client_config = ClientConfig::new();
             client_config
                 .dangerous()
                 .set_certificate_verifier(Arc::new(NoVerifier {}));
             Connector::new()
                 .rustls(Arc::new(client_config))
-                .timeout(Duration::from_secs(config.timeout))
+                .timeout(Duration::from_secs(args.timeout))
                 .finish()
         } else {
             Connector::new()
-                .timeout(Duration::from_secs(config.timeout))
+                .timeout(Duration::from_secs(args.timeout))
                 .finish()
         };
         let client = ClientBuilder::new().connector(connector).finish();
 
         App::new()
             .data(client)
-            .data(config.clone())
+            .data(args.clone())
             .default_service(web::route().to(handler::forward))
     });
 
-    if let (Some(tls_cert), Some(tls_key)) = (config_.tls_cert, config_.tls_key) {
+    if let (Some(tls_cert), Some(tls_key)) = (args_.tls_cert, args_.tls_key) {
         let cert_file = load_cert(&tls_cert)?;
         let key_file = load_private_key(&tls_key)?;
         let mut rustls_config = ServerConfig::new(NoClientAuth::new());
         rustls_config
             .set_single_cert(cert_file, key_file)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-        http_server = http_server.bind_rustls(config_.listen, rustls_config)?;
+        http_server = http_server.bind_rustls(args_.listen, rustls_config)?;
     } else {
-        http_server = http_server.bind(config_.listen)?;
+        http_server = http_server.bind(args_.listen)?;
     }
     http_server.run().await
 }
