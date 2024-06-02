@@ -1,0 +1,91 @@
+name: Build/publish release
+
+on: [push, pull_request]
+
+jobs:
+  publish:
+    name: Binary ${{ matrix.target }} (on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            compress: true
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            compress: true
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+            compress: true
+          - os: ubuntu-latest
+            target: arm-unknown-linux-musleabihf
+            compress: true
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            compress: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            compress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - run: sudo apt install musl-tools
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - name: cargo build
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          args: --release --locked
+          target: ${{ matrix.target }}
+
+      - name: Set exe extension for Windows
+        run: echo "EXE=.exe" >> $env:GITHUB_ENV
+        if: startsWith(matrix.os, 'windows')
+
+      - name: Compress binaries
+        uses: svenstaro/upx-action@v2
+        with:
+          files: target/${{ matrix.target }}/release/proxyboi${{ env.EXE }}
+          args: --best --lzma
+          strip: false  # We're stripping already in Cargo.toml
+        if: ${{ matrix.compress }}
+
+      - name: Get version from tag
+        id: extract_version
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Install CHANGELOG parser
+        uses: taiki-e/install-action@parse-changelog
+
+      - name: Get CHANGELOG entry
+        run: parse-changelog CHANGELOG.md ${{ steps.extract_version.outputs.version }} | tee changelog_entry
+        if: startsWith(github.ref_name, 'v') && github.ref_type == 'tag'
+        shell: bash
+
+      - name: Read changelog entry from file
+        id: changelog_entry
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./changelog_entry
+        if: startsWith(github.ref_name, 'v') && github.ref_type == 'tag'
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/${{ matrix.target }}/release/proxyboi${{ env.EXE }}
+          tag: ${{ github.ref_name }}
+          asset_name: proxyboi-${{ steps.extract_version.outputs.version }}-${{ matrix.target }}${{ env.EXE }}
+          body: ${{ steps.changelog_entry.outputs.content }}
+        if: startsWith(github.ref_name, 'v') && github.ref_type == 'tag'
