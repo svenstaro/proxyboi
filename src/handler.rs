@@ -2,7 +2,7 @@ use actix_web::{client::Client, web, HttpRequest, HttpResponse};
 use log::info;
 
 use crate::{
-    config::ProxyboiConfig,
+    args::CliArgs,
     error::ProxyboiError,
     forwarded_header::ForwardedHeader,
     logging::{
@@ -13,16 +13,16 @@ use crate::{
 pub async fn forward(
     incoming_request: HttpRequest,
     body: web::Bytes,
-    config: web::Data<ProxyboiConfig>,
+    args: web::Data<CliArgs>,
     client: web::Data<Client>,
 ) -> Result<HttpResponse, ProxyboiError> {
-    let incoming_request_log = log_incoming_request(&incoming_request, config.verbose);
+    let incoming_request_log = log_incoming_request(&incoming_request, args.verbose);
 
     // Figure out new URL like such:
     // Old URL: http://localhost:8080/foo?bar=1
     // New URL: https://0.0.0.0:8081/foo?bar=1
     // So in effect, we have to change `protocol`, `host`, `port` and keep `path` and `query`.
-    let mut new_url = config.upstream.clone();
+    let mut new_url = args.upstream.clone();
     new_url.set_path(incoming_request.uri().path());
     new_url.set_query(incoming_request.uri().query());
 
@@ -45,7 +45,7 @@ pub async fn forward(
 
     let forwarded_header = ForwardedHeader::from_info(
         &peer,
-        &config.listen.ip().to_string(),
+        &args.listen.ip().to_string(),
         forwarded,
         host,
         protocol,
@@ -90,7 +90,7 @@ pub async fn forward(
         .set_header("via", via);
 
     // Insert additional headers for upstream server request.
-    for additional_header in &config.upstream_headers {
+    for additional_header in &args.upstream_headers {
         let (header_name, header_value) = additional_header
             .iter()
             .next()
@@ -98,12 +98,12 @@ pub async fn forward(
         upstream_req = upstream_req.set_header(header_name, header_value.clone());
     }
 
-    let upstream_request_log = log_upstream_request(&upstream_req, config.verbose);
+    let upstream_request_log = log_upstream_request(&upstream_req, args.verbose);
 
     let mut upstream_resp = upstream_req.send_body(body).await?;
 
     let upstream_response_log =
-        log_upstream_response(&upstream_resp, new_url.as_str(), config.verbose);
+        log_upstream_response(&upstream_resp, new_url.as_str(), args.verbose);
 
     let mut outgoing_resp_builder = HttpResponse::build(upstream_resp.status());
     for (header_name, header_value) in upstream_resp
@@ -117,7 +117,7 @@ pub async fn forward(
     }
 
     // Insert additional headers for outgoing response.
-    for additional_header in &config.response_headers {
+    for additional_header in &args.response_headers {
         let (header_name, header_value) = additional_header
             .iter()
             .next()
@@ -133,7 +133,7 @@ pub async fn forward(
             .connection_info()
             .realip_remote_addr()
             .unwrap_or("unknown"),
-        config.verbose,
+        args.verbose,
     );
     info!(
         "{incoming_req}\n{upstream_req}\n{upstream_resp}\n{outgoing_resp}",

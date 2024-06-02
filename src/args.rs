@@ -27,7 +27,7 @@ fn parse_header(header: &str) -> Result<HeaderMap, String> {
 
 #[derive(Parser, Debug, Clone)]
 #[clap(name = "proxyboi", version, author, about)]
-pub struct ProxyboiConfig {
+pub struct CliArgs {
     /// Socket to listen on
     #[clap(short, long, default_value = "0.0.0.0:8080")]
     pub listen: SocketAddr,
@@ -49,11 +49,11 @@ pub struct ProxyboiConfig {
     pub upstream: Url,
 
     /// Additional headers to send to upstream server
-    #[clap(long = "upstream-header", parse(try_from_str = parse_header))]
+    #[clap(long = "upstream-header", value_parser = parse_header)]
     pub upstream_headers: Vec<HeaderMap>,
 
     /// Additional response headers to send to requesting client
-    #[clap(long = "response-header", parse(try_from_str = parse_header))]
+    #[clap(long = "response-header", value_parser = parse_header)]
     pub response_headers: Vec<HeaderMap>,
 
     /// Connection timeout against upstream in seconds (including DNS name resolution)
