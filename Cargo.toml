@@ -18,7 +18,7 @@ panic = 'abort'
 
 [dependencies]
 clap = { version = "4", features = ["derive", "cargo", "wrap_help", "env"] }
-actix-web = { version= "3", features = ["rustls"] }
+actix-web = { version= "4", features = ["rustls"] }
 simplelog = "0.12"
 log = "0.4"
 futures = "0.3"
@@ -28,8 +28,8 @@ yansi = "1"
 Inflector = "0.11"
 thiserror = "1"
 anyhow = "1"
-webpki = "0.21"
-rustls = { version = "0.18" }
+webpki = "0.22"
+rustls = { version = "0.20" }
 
 [dev-dependencies]
 pretty_assertions = "1.1"
